@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff3f6">
+  <title>A little question for you 💗</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: ui-rounded, "Segoe UI", system-ui, -apple-system, sans-serif;
+      --pink: #ff4f83;
+      --deep-pink: #e93870;
+      --ink: #542b40;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 50% 35%, #fff 0%, #fff7f8 42%, #ffe9ef 100%);
+      color: var(--ink);
+    }
+    .scene {
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .card { width: min(100%, 620px); position: relative; z-index: 1; }
+    .heart {
+      display: inline-grid;
+      place-items: center;
+      width: 76px;
+      height: 76px;
+      border-radius: 26px;
+      background: #ffe3eb;
+      font-size: 40px;
+      box-shadow: 0 12px 32px #ff8eae35;
+      animation: bob 2.8s ease-in-out infinite;
+    }
+    h1 {
+      margin: 28px 0 12px;
+      font-size: clamp(2.35rem, 8vw, 4.4rem);
+      line-height: 1.04;
+      letter-spacing: -.055em;
+      color: #71314f;
+    }
+    .subtitle { margin: 0; color: #9b6d82; font-size: clamp(1rem, 3vw, 1.15rem); }
+    .play-area {
+      position: relative;
+      min-height: 125px;
+      margin-top: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 28px;
+      min-width: 112px;
+      font: inherit;
+      font-size: 1.05rem;
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform .25s ease, box-shadow .2s ease, background .2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #yes {
+      position: relative;
+      z-index: 3;
+      color: white;
+      background: var(--pink);
+      box-shadow: 0 9px 22px #ff4f8350;
+      transform: scale(var(--yes-scale, 1));
+      transform-origin: center;
+    }
+    #yes:hover { background: var(--deep-pink); box-shadow: 0 12px 27px #ff4f836b; }
+    #no { color: #885d70; background: #fff; box-shadow: 0 5px 18px #7a3d5614; }
+    #no:hover { background: #fff7f9; }
+    .hint { min-height: 26px; margin: 22px 0 0; color: #b17e94; font-size: .95rem; }
+    .success {
+      position: fixed;
+      z-index: 5;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #ff4f83;
+      color: white;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .45s ease, visibility .45s;
+    }
+    .success.show { opacity: 1; visibility: visible; }
+    .success-content { transform: translateY(12px) scale(.96); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+    .success.show .success-content { transform: translateY(0) scale(1); }
+    .success h2 { margin: 0; font-size: clamp(3rem, 12vw, 7rem); letter-spacing: -.06em; }
+    .success p { margin: 14px 0 0; font-size: clamp(1.1rem, 4vw, 1.5rem); }
+    .sparkle { position: fixed; z-index: 4; pointer-events: none; animation: float-up 1.8s ease-out forwards; }
+    @keyframes bob { 50% { transform: translateY(-7px) rotate(3deg); } }
+    @keyframes float-up { from { opacity: 1; transform: translateY(0) scale(.7) rotate(0); } to { opacity: 0; transform: translateY(-110px) scale(1.35) rotate(22deg); } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="scene">
+    <section class="card" aria-labelledby="question">
+      <div class="heart" aria-hidden="true">💌</div>
+      <h1 id="question">Will you be<br>my girlfriend?</h1>
+      <p class="subtitle">I have a tiny question for you…</p>
+      <div class="play-area">
+        <button id="yes" type="button">Yes 💗</button>
+        <button id="no" type="button">No</button>
+      </div>
+      <p class="hint" id="hint" aria-live="polite"></p>
+    </section>
+  </main>
+  <section class="success" id="success" role="dialog" aria-modal="true" aria-labelledby="success-title">
+    <div class="success-content">
+      <h2 id="success-title">Yay! 💖</h2>
+      <p>You just made me the happiest person.</p>
+    </div>
+  </section>
+  <script>
+    const yes = document.querySelector('#yes');
+    const no = document.querySelector('#no');
+    const hint = document.querySelector('#hint');
+    const success = document.querySelector('#success');
+    const messages = [
+      'Are you sure? 🥺',
+      'Give it another thought? 💕',
+      'The Yes button is getting excited…',
+      'It really hopes you’ll say yes! 💗',
+      'Okay, this is getting hard to ignore 😄'
+    ];
+    let noClicks = 0;
+
+    no.addEventListener('click', () => {
+      noClicks += 1;
+      const scale = Math.min(1 + noClicks * 0.4 + noClicks ** 1.45 * 0.055, 12);
+      yes.style.setProperty('--yes-scale', scale);
+      hint.textContent = messages[Math.min(noClicks - 1, messages.length - 1)];
+      if (scale >= 7) {
+        yes.style.position = 'fixed';
+        yes.style.inset = '0';
+        yes.style.width = '100vw';
+        yes.style.height = '100vh';
+        yes.style.borderRadius = '0';
+        yes.style.transform = 'none';
+        yes.textContent = 'Yes 💗';
+        yes.style.fontSize = 'clamp(2rem, 8vw, 5rem)';
+        yes.style.boxShadow = 'none';
+        no.hidden = true;
+      }
+    });
+
+    yes.addEventListener('click', () => {
+      success.classList.add('show');
+      success.querySelector('.success-content').focus?.();
+      for (let i = 0; i < 18; i += 1) {
+        const sparkle = document.createElement('span');
+        sparkle.className = 'sparkle';
+        sparkle.textContent = ['💖', '✨', '💕', '💗'][i % 4];
+        sparkle.style.left = `${Math.random() * 100}vw`;
+        sparkle.style.top = `${55 + Math.random() * 40}vh`;
+        sparkle.style.fontSize = `${18 + Math.random() * 24}px`;
+        document.body.append(sparkle);
+        setTimeout(() => sparkle.remove(), 1900);
+      }
+    });
+  </script>
+</body>
+</html>
